@@ -3,9 +3,9 @@ package game
 import (
 	"encoding/json"
 	"fmt"
-	"squrefight/core"
-	"squrefight/pb"
-	"squrefight/pbmsg"
+	"funygame/core"
+	"funygame/pb"
+	"funygame/pbmsg"
 	"sync"
 )
 

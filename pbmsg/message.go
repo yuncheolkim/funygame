@@ -3,8 +3,8 @@ package pbmsg
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"squrefight/login"
-	"squrefight/pb"
+	"funygame/login"
+	"funygame/pb"
 )
 
 var MessageProcessMap = make(map[int32]func(*pb.Message) proto.Message)

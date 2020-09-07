@@ -1,6 +1,6 @@
 package game
 
-import "squrefight/core"
+import "funygame/core"
 
 type Player struct {
 	id   int32

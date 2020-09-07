@@ -3,7 +3,7 @@ package login
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"squrefight/pb"
+	"funygame/pb"
 )
 
 func Login(request *pb.LoginRequest) proto.Message {

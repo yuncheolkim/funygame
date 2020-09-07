@@ -1,6 +1,6 @@
 package main
 
-import "squrefight/game"
+import "funygame/game"
 
 func main() {
 	//pbmsg.InitHandler()

@@ -2,7 +2,7 @@ package game
 
 import (
 	"fmt"
-	"squrefight/core"
+	"funygame/core"
 )
 
 func MoveAction(request interface{}, request2 *core.Request) interface{} {

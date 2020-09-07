@@ -2,7 +2,7 @@ package pbmsg
 
 import (
 	"github.com/golang/protobuf/proto"
-	"squrefight/pb"
+	"funygame/pb"
 )
 
 func LoginRequest(process func(*pb.LoginRequest) proto.Message) {

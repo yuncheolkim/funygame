@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"squrefight/utils"
+	"funygame/utils"
 	"strconv"
 	"strings"
 )
 
 func main() {
 
-	r, e := os.Open(`/Users/jinyunzhe/go/src/squrefight/resources/proto/message.proto`)
+	r, e := os.Open(`/Users/jinyunzhe/go/src/funygame/resources/proto/message.proto`)
 	if e != nil {
 		panic(e)
 	}

@@ -1,6 +1,6 @@
 package game
 
-import "squrefight/core"
+import "funygame/core"
 
 const MoveProcess = 1
 const EnterGameProcess = 2

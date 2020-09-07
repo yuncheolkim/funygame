@@ -1,0 +1,16 @@
+syntax = "proto3";
+package proto;
+option java_multiple_files = true;
+
+message MoveTel {
+    double x = 1;
+    double y = 2;
+}
+message MoveMsg {
+    double x = 1;
+    double y = 2;
+}
+
+message EnterRoomReq{
+    int64 roomId = 1;
+}

@@ -1,0 +1,12 @@
+package pbmsg
+import (
+	"github.com/golang/protobuf/proto"
+	"squrefight/pb"
+)
+{{range .}}
+func {{.Type}}(process func(*pb.{{.Type}}) proto.Message) {
+	MessageProcessMap[{{.Id}}] = func(message *pb.Message) proto.Message {
+		return process(message.Content.(*pb.Message_{{.Name}}).{{.Name}})
+	}
+}
+{{end}}

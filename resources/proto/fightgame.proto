@@ -1,15 +1,36 @@
 syntax = "proto3";
 package proto;
 option go_package = ".;pb";
+
+//msgNo=10001
+message CreateRoomReq {
+    int64 roomId = 1;
+}
+
+//msgNo=10003
+message EnterRoomReq {
+    int64 roomId = 1;
+}
+
+//msgNo=10005
+message LeaveRoomReq {
+    int64 roomId = 1;
+}
+
+//msgNo=10007
+message LoginReq {
+    string token = 1;
+    string username = 2;
+
+}
+//msgNo=10008
+message LoginRes {
+}
+//msgNo=10009
+message LogoutReq {
+}
+// msgNo = 20001
 message MoveTel {
     double x = 1;
     double y = 2;
-}
-message MoveMsg {
-    double x = 1;
-    double y = 2;
-}
-
-message EnterRoomReq{
-    int64 roomId = 1;
 }

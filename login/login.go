@@ -6,7 +6,7 @@ import (
 	"funygame/pb"
 )
 
-func Login(request *pb.LoginRequest) proto.Message {
+func Login(request *pb.LoginReq) proto.Message {
 
 	fmt.Printf("Some one login;%v\n", request)
 	return nil

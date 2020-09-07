@@ -3,28 +3,16 @@ option go_package = ".;pb";
 package proto;
 import "common.proto";
 import "fightgame.proto";
-// 命名规范：
-// content中的名字结尾必须以下后缀中的一个
-// Req = 请求,要求一定有返回着
-// Res = Req消息的返回值
-// Msg = 服务器主动推送信息
-// Tel = 客户端请求，不需要进行回复的消息
-message Message {
+// 默认功能消息 10000 以下
+// 业务消息：
+// 1xxxx req 请求消息需要返回消息
+// 2xxxx tel 请求消息不需要返回消息
+// 3xxxx push 推送消息
 
-    int64 seq = 1; // 消息编号
-    fixed64 uid = 2; // 用户唯一标识符
-    repeated fixed64 broadcastUid = 3; // 需要收到广播的玩家
-    oneof content {
-        HbReq hbReq = 9;
-        HbRes hbRes = 10;
-        Success successRes = 11;
-        Error errorRes = 12;
-        LoginReq loginReq = 13;
-        LoginRes loginRes = 14;
-        ServerReq serverReq = 15;
-        // LOCK 业务消息写在下面
-        MoveTel moveTel = 101;
-        MoveMsg moveMsg = 102;
-        EnterRoomReq EnterRoomReq = 103;
-    }
+message Message {
+    int64 seq = 1; // 消息序列号
+    int64 msgNo = 2; // 消息编号
+    repeated int64 broadcastUid = 3; // 需要收到广播的玩家
+    bytes body = 4;
+    int64 uid = 5;
 }

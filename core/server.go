@@ -40,7 +40,6 @@ func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
 	conn.SetKeepAlivePeriod(time.Minute)
 
 	return conn, nil
-
 }
 
 type Server struct {
@@ -93,6 +92,7 @@ func (s *Server) Serve(l net.Listener) error {
 		rw, e := l.Accept()
 
 		if e != nil {
+			Logf("Accept error: %v", e)
 
 			select {
 			case <-s.doneChan:

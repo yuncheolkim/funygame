@@ -294,7 +294,7 @@ const (
 
 // 一个tcp连接
 type conn struct {
-	server *Server // 服务
+	server *Server  // 服务
 	rwc    net.Conn //一个真正网络链接
 
 	curRes     atomic.Value
@@ -330,54 +330,7 @@ func (cr *connReader) lock() {
 func (cr *connReader) unlock() {
 	cr.mu.Unlock()
 }
-func (cr *connReader) startBackgroundRead() {
-	cr.lock()
-	defer cr.unlock()
-	if cr.inRead {
-		panic("in read")
-	}
-	if cr.hasByte {
-		return
-	}
 
-	cr.inRead = true
-	cr.conn.rwc.SetReadDeadline(time.Time{})
-	go cr.backgroundRead()
-
-}
-func (cr *connReader) backgroundRead() {
-	n, err := cr.conn.rwc.Read(cr.byteBuf[:])
-	cr.lock()
-	if n == 1 {
-		cr.hasByte = true
-	}
-
-	if ne, ok := err.(net.Error); ok && cr.aborted && ne.Timeout() {
-
-	} else if err != nil {
-		cr.handleReadErr(err)
-	}
-	cr.aborted = false
-	cr.inRead = false
-	cr.unlock()
-	cr.cond.Broadcast()
-}
-func (cr *connReader) abortPendingRead() {
-	cr.lock()
-	defer cr.unlock()
-	if !cr.inRead {
-		return
-	}
-	cr.aborted = true
-	cr.conn.rwc.SetReadDeadline(time.Unix(1, 0))
-
-	for cr.inRead {
-		cr.cond.Wait()
-	}
-
-	cr.conn.rwc.SetReadDeadline(time.Time{})
-
-}
 func (cr *connReader) Read(p []byte) (n int, err error) {
 	cr.lock()
 	if cr.inRead {
@@ -543,13 +496,6 @@ func (c *conn) serve(ctx context.Context) {
 
 		c.curRes.Store(response)
 
-		// 等待读取下一个消息
-		if requestBodyRemains(response.req.Body) {
-			registerOnHitEOF(response.req.Body, response.conn.r.startBackgroundRead)
-		} else {
-			response.conn.r.startBackgroundRead()
-		}
-
 		// 处理业务
 		serverHandler{s: c.server}.ServeHandler(response.req, response)
 
@@ -666,7 +612,7 @@ func (mu *ServeMux) Handler(request *Request) (h Handler) {
 
 	h = mu.match(request.MesType())
 	if h == nil {
-		Logf("没有handler")
+		Logf("没有handler:%s", request.MesType())
 		return
 	}
 

@@ -5,14 +5,16 @@ import "funygame/core"
 type Player struct {
 	id   int32
 	conn *core.Connection
+	data *PlayerData
+}
 
+type PlayerData struct {
 	X  float64
 	Y  float64
 	Hp int
 }
 
 func (p *Player) SetId(i int32) {
-
 	p.id = i
 }
 

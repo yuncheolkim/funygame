@@ -3,8 +3,10 @@ package core
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
+	"funygame/pb"
+
+	"github.com/golang/protobuf/proto"
 	"net"
 	"testing"
 	"time"
@@ -13,30 +15,6 @@ import (
 type TestDataJson struct {
 	Age  int
 	Name string
-}
-
-func TestServer_Serve(t *testing.T) {
-
-	sm := &ServeMux{}
-
-	sm.HandleFunc("test", func(r *Request, w *Response) {
-
-		test := TestDataJson{}
-
-		r.ReadJson(&test)
-		fmt.Println(test)
-		w.WriteJson(test)
-
-	})
-
-	s := &Server{
-		Addr: "127.0.0.1:8900",
-	}
-
-	s.Handler = sm
-
-	s.ListenAndServe()
-
 }
 
 func TestClient(t *testing.T) {
@@ -53,18 +31,17 @@ func TestClient(t *testing.T) {
 	defer conn.Close()
 
 	fmt.Println(conn.LocalAddr().String() + " : Client connected!")
-	msg := TestDataJson{
-		Age:  123,
-		Name: "sst",
+	msg := pb.Message{
+		Seq: 11,
+		Uid: 123,
 	}
 
 	for i := 0; i < 2; i++ {
 		var b []byte
-		l, _ := json.Marshal(msg)
+		l, _ := proto.Marshal(&msg)
 
-		x := int32(len(l))
 		bytesBuffer := bytes.NewBuffer([]byte{})
-		binary.Write(bytesBuffer, binary.BigEndian, x)
+		_ = binary.Write(bytesBuffer, binary.BigEndian, int32(len(l)))
 		b = append(b, bytesBuffer.Bytes()...)
 		b = append(b, l...)
 

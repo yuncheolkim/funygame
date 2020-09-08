@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"funygame/core"
 	"funygame/pb"
-	"funygame/pbmsg"
 	"sync"
 )
 
@@ -69,7 +68,6 @@ var GameVal = &Game{
 
 func Start() {
 
-	pbmsg.InitHandler()
 	InitProcess()
 	sm := &core.ServeMux{}
 
@@ -108,10 +106,6 @@ func Start() {
 			return
 		}
 		fmt.Println(test)
-
-		message := pbmsg.MessageProcessMap[test.get]
-
-		message(test)
 
 	})
 

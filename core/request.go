@@ -23,7 +23,6 @@ type Request struct {
 
 // 消息类型
 func (r *Request) MesType() string {
-	// todo
 	return "pf"
 }
 func (r *Request) ReadJson(obj interface{}) ([]byte, error) {
@@ -35,8 +34,10 @@ func (r *Request) ReadJson(obj interface{}) ([]byte, error) {
 }
 
 func (r *Request) ReadPb(obj proto.Message) error {
-
-	p, _ := ioutil.ReadAll(r.Body)
+	p, e := ioutil.ReadAll(r.Body)
+	if e != nil {
+		println(e)
+	}
 
 	return proto.Unmarshal(p, obj)
 }

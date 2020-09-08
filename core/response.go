@@ -56,7 +56,6 @@ func (r *Response) finishRequest() {
 	r.cw.close()
 	r.conn.bufw.Flush()
 
-	r.conn.r.abortPendingRead()
 	r.reqBody.Close()
 
 }

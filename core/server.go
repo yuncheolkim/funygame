@@ -122,7 +122,6 @@ func (s *Server) Serve(l net.Listener) error {
 
 		c := s.newConn(rw)
 		c.setState(c.rwc, StateNew)
-		c.remoteAddr = c.rwc.RemoteAddr().String()
 
 		if s.onConnect != nil {
 			cc := &Connection{
@@ -295,8 +294,8 @@ const (
 
 // 一个tcp连接
 type conn struct {
-	server *Server
-	rwc    net.Conn
+	server *Server // 服务
+	rwc    net.Conn //一个真正网络链接
 
 	curRes     atomic.Value
 	r          *connReader
@@ -559,7 +558,7 @@ func (c *conn) serve(ctx context.Context) {
 		c.setState(c.rwc, StateIdle)
 		c.curRes.Store((*Response)(nil)) // 直接nil不可以？
 
-		//		// 读不超时
+		// 读不超时
 		c.rwc.SetReadDeadline(time.Time{})
 
 	}
@@ -581,7 +580,7 @@ func registerOnHitEOF(rc io.ReadCloser, fn func()) {
 }
 
 func (c *conn) readRequest(ctx context.Context) (*Response, error) {
-	c.r.remain = int64(c.server.initHeadByte())
+	c.r.remain = c.server.initHeadByte()
 	req, err := readRequest(c.bufr)
 	if err != nil {
 		return nil, err

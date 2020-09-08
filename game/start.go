@@ -109,7 +109,7 @@ func Start() {
 		}
 		fmt.Println(test)
 
-		message := pbmsg.MessageProcessMap[test.Type]
+		message := pbmsg.MessageProcessMap[test.get]
 
 		message(test)
 

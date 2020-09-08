@@ -11,7 +11,7 @@ import "fightgame.proto";
 
 message Message {
     int64 seq = 1; // 消息序列号
-    int64 msgNo = 2; // 消息编号
+    int32 msgNo = 2; // 消息编号
     repeated int64 broadcastUid = 3; // 需要收到广播的玩家
     bytes body = 4;
     int64 uid = 5;

@@ -1,8 +1,6 @@
 syntax = "proto3";
 option go_package = "pb";
 package proto;
-import "common.proto";
-import "fightgame.proto";
 // 默认功能消息 10000 以下
 // 业务消息：
 // 1xxxx req 请求消息需要返回消息

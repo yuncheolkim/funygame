@@ -1,7 +1,6 @@
 package game
 
 import (
-	"encoding/json"
 	"fmt"
 	"funygame/core"
 	"funygame/pb"
@@ -70,32 +69,6 @@ func Start() {
 
 	InitProcess()
 	sm := &core.ServeMux{}
-
-	sm.HandleFunc("json", func(r *core.Request, w *core.Response) {
-
-		test := MsgRecv{}
-		bytes, e := r.ReadJson(&test)
-		if e != nil {
-			core.Debug(e.Error())
-			return
-		}
-		fmt.Println(test)
-
-		if p, ok := GameVal.ProcessMap[test.T]; ok {
-			m := p.Msg
-			//r := p.Parser(bytes)
-			json.Unmarshal(bytes, m)
-			action := p.Action(m, r)
-			core.Debug("return %v", action)
-			if action != nil {
-				w.WriteJson(action)
-			}
-
-		} else {
-			core.Debug("No process")
-		}
-
-	})
 
 	sm.HandleFunc("pf", func(r *core.Request, w *core.Response) {
 

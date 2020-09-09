@@ -121,7 +121,7 @@ func (s *Server) Serve(l net.Listener) error {
 		tempDelay = 0
 
 		c := s.newConn(rw)
-		c.setState(c.rwc, StateNew)
+		c.setState(StateNew)
 
 		if s.onConnect != nil {
 			cc := &Connection{
@@ -133,7 +133,6 @@ func (s *Server) Serve(l net.Listener) error {
 		}
 		go c.serve(ctx)
 	}
-
 }
 func (s *Server) shuttingDown() bool {
 	return atomic.LoadInt32(&s.inShutdown) != 0
@@ -313,7 +312,6 @@ type connReader struct {
 	mu      sync.Mutex
 	inRead  bool
 	remain  int64
-	aborted bool
 }
 
 func (cr *connReader) lock() {
@@ -457,7 +455,7 @@ func (c *conn) serve(ctx context.Context) {
 			c.server.onClose(c.remoteAddr)
 		}
 		c.close()
-		c.setState(c.rwc, StateClosed)
+		c.setState(StateClosed)
 	}()
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -472,7 +470,7 @@ func (c *conn) serve(ctx context.Context) {
 		Debug("开始读取请求")
 		response, e := c.readRequest(ctx)
 		if c.r.remain != c.server.initHeadByte() {
-			c.setState(c.rwc, StateActive)
+			c.setState(StateActive)
 		}
 		if e != nil {
 			Logf("err 结束读取:%v", e)
@@ -484,7 +482,7 @@ func (c *conn) serve(ctx context.Context) {
 
 		response.finishRequest()
 
-		c.setState(c.rwc, StateIdle)
+		c.setState(StateIdle)
 
 		// 读不超时
 		c.rwc.SetReadDeadline(time.Time{})
@@ -536,7 +534,7 @@ func (c *conn) finalFlush() {
 
 }
 
-func (c *conn) setState(rwc net.Conn, state ConnState) {
+func (c *conn) setState(state ConnState) {
 	srv := c.server
 	switch state {
 	case StateNew:

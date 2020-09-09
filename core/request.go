@@ -83,10 +83,8 @@ type body struct {
 	r      *bufio.Reader
 	remain int
 
-	mu       sync.Mutex
-	sawEof   bool
-	closed   bool
-	onHitEOF func()
+	mu     sync.Mutex
+	closed bool
 }
 
 func (b *body) Close() error {
@@ -114,15 +112,10 @@ func (b *body) Read(p []byte) (n int, err error) {
 }
 
 func (b *body) readLocked(p []byte) (n int, err error) {
-	if b.sawEof {
-		return 0, io.EOF
-	}
 	Debug("读取长度:%v", len(p))
 	n, err = b.src.Read(p)
 	Debug("读取:%v,err:%v", n, err)
 	if err == io.EOF {
-		b.sawEof = true
-
 		if lr, ok := b.src.(*io.LimitedReader); ok && lr.N > 0 {
 			Debug("ErrUnexpectedEOF")
 			err = io.ErrUnexpectedEOF
@@ -133,25 +126,7 @@ func (b *body) readLocked(p []byte) (n int, err error) {
 		if lr, ok := b.src.(*io.LimitedReader); ok && lr.N == 0 {
 			Debug("结束body")
 			err = io.EOF
-			b.sawEof = true
 		}
 	}
-
-	if b.sawEof && b.onHitEOF != nil {
-		Debug("结束")
-		b.onHitEOF()
-	}
 	return
-}
-
-func (b *body) bodyRemains() bool {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return !b.sawEof
-}
-
-func (b *body) registerOnHitEOF(fn func()) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.onHitEOF = fn
 }

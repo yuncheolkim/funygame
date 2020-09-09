@@ -502,27 +502,13 @@ func (c *conn) serve(ctx context.Context) {
 		response.finishRequest()
 
 		c.setState(c.rwc, StateIdle)
-		c.curRes.Store((*Response)(nil)) // 直接nil不可以？
+		c.curRes.Store((*Response)(nil))
 
 		// 读不超时
 		c.rwc.SetReadDeadline(time.Time{})
 
 	}
 
-}
-func requestBodyRemains(rc io.ReadCloser) bool {
-
-	switch v := rc.(type) {
-	case *body:
-		return v.bodyRemains()
-	}
-	return false
-}
-func registerOnHitEOF(rc io.ReadCloser, fn func()) {
-	switch v := rc.(type) {
-	case *body:
-		v.registerOnHitEOF(fn)
-	}
 }
 
 func (c *conn) readRequest(ctx context.Context) (*Response, error) {

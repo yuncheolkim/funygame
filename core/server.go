@@ -297,7 +297,6 @@ type conn struct {
 	server *Server  // 服务
 	rwc    net.Conn //一个真正网络链接
 
-	curRes     atomic.Value
 	r          *connReader
 	remoteAddr string
 	cancelCtx  context.CancelFunc
@@ -312,19 +311,13 @@ type connReader struct {
 	conn *conn
 
 	mu      sync.Mutex
-	cond    *sync.Cond
 	inRead  bool
 	remain  int64
 	aborted bool
-	hasByte bool
-	byteBuf [1]byte
 }
 
 func (cr *connReader) lock() {
 	cr.mu.Lock()
-	if cr.cond == nil {
-		cr.cond = sync.NewCond(&cr.mu)
-	}
 }
 
 func (cr *connReader) unlock() {
@@ -350,13 +343,6 @@ func (cr *connReader) Read(p []byte) (n int, err error) {
 		p = p[:cr.remain]
 	}
 
-	if cr.hasByte {
-		p[0] = cr.byteBuf[0]
-		cr.hasByte = false
-		cr.unlock()
-		return 1, nil
-	}
-
 	cr.inRead = true
 	cr.unlock()
 	n, err = cr.conn.rwc.Read(p)
@@ -368,7 +354,6 @@ func (cr *connReader) Read(p []byte) (n int, err error) {
 	}
 	cr.remain -= int64(n)
 	cr.unlock()
-	cr.cond.Broadcast()
 
 	return
 }
@@ -494,15 +479,12 @@ func (c *conn) serve(ctx context.Context) {
 			return
 		}
 
-		c.curRes.Store(response)
-
 		// 处理业务
 		serverHandler{s: c.server}.ServeHandler(response.req, response)
 
 		response.finishRequest()
 
 		c.setState(c.rwc, StateIdle)
-		c.curRes.Store((*Response)(nil))
 
 		// 读不超时
 		c.rwc.SetReadDeadline(time.Time{})

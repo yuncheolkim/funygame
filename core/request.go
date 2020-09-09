@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"github.com/golang/protobuf/proto"
 	"io"
@@ -24,13 +23,6 @@ type Request struct {
 // 消息类型
 func (r *Request) MesType() string {
 	return "pf"
-}
-func (r *Request) ReadJson(obj interface{}) ([]byte, error) {
-
-	p, _ := ioutil.ReadAll(r.Body)
-
-	Debug("ReadJson %b", p)
-	return p, json.Unmarshal(p, obj)
 }
 
 func (r *Request) ReadPb(obj proto.Message) error {

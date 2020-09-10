@@ -19,8 +19,5 @@ func (p *Player) SetId(i int32) {
 }
 
 func (p *Player) SendMsg(i interface{}) {
-
-	p.conn.WriteJson(i)
 	p.conn.Flush()
-
 }

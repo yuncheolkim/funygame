@@ -127,8 +127,6 @@ func (s *Server) Serve(l net.Listener) error {
 			cc := &Connection{
 				conn: c,
 			}
-			cc.cw.c = cc
-			cc.w = newBufioWriterSize(&cc.cw, 2048)
 			s.onConnect(cc)
 		}
 		go c.serve(ctx)
@@ -309,9 +307,9 @@ type conn struct {
 type connReader struct {
 	conn *conn
 
-	mu      sync.Mutex
-	inRead  bool
-	remain  int64
+	mu     sync.Mutex
+	inRead bool
+	remain int64
 }
 
 func (cr *connReader) lock() {
@@ -504,7 +502,6 @@ func (c *conn) readRequest(ctx context.Context) (*Response, error) {
 	response := &Response{
 		conn:      c,
 		req:       req,
-		reqBody:   req.Body,
 		cancelCtx: cancelCtx,
 	}
 

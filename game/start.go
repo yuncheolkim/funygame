@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"funygame/core"
 	"funygame/pb"
+	"funygame/utils"
 	"sync"
 )
 
@@ -79,6 +80,9 @@ func Start() {
 			return
 		}
 		fmt.Println(test)
+
+		bytes := utils.MsgToBytes(test)
+		w.Write(bytes)
 
 	})
 

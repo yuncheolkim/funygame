@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,9 +18,9 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// msgNo=11
+//msgNo=11
 type Error struct {
 	Index                int32    `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 	Content              string   `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
@@ -31,16 +33,17 @@ func (m *Error) Reset()         { *m = Error{} }
 func (m *Error) String() string { return proto.CompactTextString(m) }
 func (*Error) ProtoMessage()    {}
 func (*Error) Descriptor() ([]byte, []int) {
-	return fileDescriptor_common_e5d74e837c03b2c1, []int{0}
+	return fileDescriptor_555bd8c177793206, []int{0}
 }
+
 func (m *Error) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Error.Unmarshal(m, b)
 }
 func (m *Error) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Error.Marshal(b, m, deterministic)
 }
-func (dst *Error) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Error.Merge(dst, src)
+func (m *Error) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Error.Merge(m, src)
 }
 func (m *Error) XXX_Size() int {
 	return xxx_messageInfo_Error.Size(m)
@@ -65,7 +68,7 @@ func (m *Error) GetContent() string {
 	return ""
 }
 
-// msgNo=12
+//msgNo=12
 type Success struct {
 	Ok                   string   `protobuf:"bytes,1,opt,name=ok,proto3" json:"ok,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -77,16 +80,17 @@ func (m *Success) Reset()         { *m = Success{} }
 func (m *Success) String() string { return proto.CompactTextString(m) }
 func (*Success) ProtoMessage()    {}
 func (*Success) Descriptor() ([]byte, []int) {
-	return fileDescriptor_common_e5d74e837c03b2c1, []int{1}
+	return fileDescriptor_555bd8c177793206, []int{1}
 }
+
 func (m *Success) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Success.Unmarshal(m, b)
 }
 func (m *Success) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Success.Marshal(b, m, deterministic)
 }
-func (dst *Success) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Success.Merge(dst, src)
+func (m *Success) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Success.Merge(m, src)
 }
 func (m *Success) XXX_Size() int {
 	return xxx_messageInfo_Success.Size(m)
@@ -104,7 +108,7 @@ func (m *Success) GetOk() string {
 	return ""
 }
 
-// 心跳协议
+//心跳协议
 // msgNo=1
 type HbReq struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -116,16 +120,17 @@ func (m *HbReq) Reset()         { *m = HbReq{} }
 func (m *HbReq) String() string { return proto.CompactTextString(m) }
 func (*HbReq) ProtoMessage()    {}
 func (*HbReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_common_e5d74e837c03b2c1, []int{2}
+	return fileDescriptor_555bd8c177793206, []int{2}
 }
+
 func (m *HbReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HbReq.Unmarshal(m, b)
 }
 func (m *HbReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HbReq.Marshal(b, m, deterministic)
 }
-func (dst *HbReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HbReq.Merge(dst, src)
+func (m *HbReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HbReq.Merge(m, src)
 }
 func (m *HbReq) XXX_Size() int {
 	return xxx_messageInfo_HbReq.Size(m)
@@ -149,16 +154,17 @@ func (m *HbRes) Reset()         { *m = HbRes{} }
 func (m *HbRes) String() string { return proto.CompactTextString(m) }
 func (*HbRes) ProtoMessage()    {}
 func (*HbRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_common_e5d74e837c03b2c1, []int{3}
+	return fileDescriptor_555bd8c177793206, []int{3}
 }
+
 func (m *HbRes) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HbRes.Unmarshal(m, b)
 }
 func (m *HbRes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HbRes.Marshal(b, m, deterministic)
 }
-func (dst *HbRes) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HbRes.Merge(dst, src)
+func (m *HbRes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HbRes.Merge(m, src)
 }
 func (m *HbRes) XXX_Size() int {
 	return xxx_messageInfo_HbRes.Size(m)
@@ -190,9 +196,9 @@ func init() {
 	proto.RegisterType((*HbRes)(nil), "proto.HbRes")
 }
 
-func init() { proto.RegisterFile("common.proto", fileDescriptor_common_e5d74e837c03b2c1) }
+func init() { proto.RegisterFile("common.proto", fileDescriptor_555bd8c177793206) }
 
-var fileDescriptor_common_e5d74e837c03b2c1 = []byte{
+var fileDescriptor_555bd8c177793206 = []byte{
 	// 161 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x49, 0xce, 0xcf, 0xcd,
 	0xcd, 0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0xe6, 0x5c, 0xac,

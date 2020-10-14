@@ -1,10 +1,10 @@
 package game
 
 import (
-	"fmt"
 	"funygame/core"
 	"funygame/pb"
 	"funygame/utils"
+	"github.com/golang/protobuf/proto"
 	"sync"
 )
 
@@ -15,6 +15,8 @@ type Game struct {
 	mu      sync.Mutex
 	AddrMap map[string]*Player
 	IdMap   map[int32]*Player
+
+	Rooms map[int32]*Room
 }
 
 func (g *Game) EnterGame(msg EnterGameMsg, request *core.Request) {
@@ -71,18 +73,38 @@ func Start() {
 	InitProcess()
 	sm := &core.ServeMux{}
 
-	sm.HandleFunc("pf", func(r *core.Request, w *core.Response) {
+	sm.HandleFunc("pb", func(r *core.Request, w *core.Response) {
 
-		test := &pb.Message{}
-		e := r.ReadPb(test)
+		msg := &pb.Message{}
+		e := r.ReadPb(msg)
+
 		if e != nil {
 			core.Debug(e.Error())
 			return
 		}
-		fmt.Println(test)
 
-		bytes := utils.MsgToBytes(test)
-		w.Write(bytes)
+		if v, ok := GameVal.ProcessMap[msg.MsgNo]; ok {
+			var msgBody proto.Message
+			if msg.Body != nil {
+				message := v.Msg()
+				e := proto.Unmarshal(msg.Body, message)
+				if e != nil {
+					core.Debug("解析body出错: %s", e.Error())
+					return
+				}
+				core.Logf("收到消息:%v", message)
+				msgBody = message;
+			}
+
+			retMsg := v.Action(msgBody, nil)
+			if retMsg != nil {
+				bytes := utils.MsgToBytes(retMsg)
+				w.Write(bytes)
+			}
+		} else {
+			core.Error("消息不存在:%v", msg.MsgNo)
+			return
+		}
 
 	})
 

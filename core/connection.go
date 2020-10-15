@@ -1,5 +1,10 @@
 package core
 
+import (
+	"funygame/utils"
+	"github.com/golang/protobuf/proto"
+)
+
 type Connection struct {
 	conn *conn
 }
@@ -9,6 +14,11 @@ func (r *Connection) RemoteAddr() string {
 }
 func (r *Connection) Write(data []byte) (n int, err error) {
 	return r.conn.bufw.Write(data)
+}
+
+func (r *Connection) WritePb(data proto.Message) (n int, err error) {
+
+	return r.conn.bufw.Write(utils.MsgToBytes(data))
 }
 
 func (r *Connection) Flush() {

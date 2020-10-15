@@ -22,7 +22,7 @@ type Request struct {
 
 // 消息类型
 func (r *Request) MesType() string {
-	return "pf"
+	return "pb"
 }
 
 func (r *Request) ReadPb(obj proto.Message) error {

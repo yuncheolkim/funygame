@@ -1,22 +1,25 @@
 package game
 
-import "funygame/core"
+import (
+	"funygame/pb"
+	"github.com/golang/protobuf/proto"
+)
 
 const MoveProcess = 1
 const EnterGameProcess = 2
 
+type Action func(msg interface{}, player *Player) proto.Message
+
 type Process struct {
-	Msg    interface{}
-	Action func(interface{}, *core.Request) interface{}
+	Msg    func() proto.Message
+	Action Action
 }
 
 func InitProcess() {
 	GameVal.ProcessMap[MoveProcess] = Process{
-		Msg:    &MoveMsg{},
-		Action: MoveAction,
-	}
-	GameVal.ProcessMap[EnterGameProcess] = Process{
-		Msg:    &EnterGameMsg{},
-		Action: EnterGame,
+		Action: MatchAction,
+		Msg: func() proto.Message {
+			return &pb.StartMatchReq_10001{}
+		},
 	}
 }

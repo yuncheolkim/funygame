@@ -1,36 +1,42 @@
 syntax = "proto3";
 package proto;
 option go_package = "pb";
+// 开始匹配
+message StartMatchReq_10001 {
+    int64 roomId = 1;
+}
+//离开游戏
+message LeaveRoomReq_10005 {
+}
 
-//msgNo=10001
-message CreateRoomReq {
+// 游戏正式开始
+message StartGamePush_30001 {
     int64 roomId = 1;
 }
 
-//msgNo=10003
-message EnterRoomReq {
-    int64 roomId = 1;
+// 玩家进入
+message UserEnterPush_30002 {
+    int32 index = 1;
 }
 
-//msgNo=10005
-message LeaveRoomReq {
-    int64 roomId = 1;
+/////////// 游戏开始后
+// 攻击别人
+message AttackTell_20001{
+    int32 index = 1; // 目标
+    int32 num = 2; // 伤害
+}
+// 回血
+message CureTell_20002{
+    int32 num = 1; // 回血
 }
 
-//msgNo=10007
-message LoginReq {
-    string token = 1;
-    string username = 2;
+// 血量变化
+message BloodChangePush_30001{
+    int32 index = 1; // 目标
+    int32 num = 2; // 血量变化
+}
 
-}
-//msgNo=10008
-message LoginRes {
-}
-//msgNo=10009
-message LogoutReq {
-}
-// msgNo = 20001
-message MoveTel {
-    double x = 1;
-    double y = 2;
-}
+
+
+
+

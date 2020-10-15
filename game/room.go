@@ -18,7 +18,7 @@ func nextRoomId() int64 {
 }
 
 type playerStatus struct {
-	blood  int;
+	blood  int
 	player *Player
 }
 
@@ -29,16 +29,28 @@ type RoomManager struct {
 	curRoom *Room
 }
 
-func (rm *RoomManager) FindRoom(uid int64) *Room {
-	if v, ok := rm.playerRoom[uid]; ok {
+func (rm *RoomManager) FindRoom(p *Player) *Room {
+	if v, ok := rm.playerRoom[p.id]; ok {
 		return v
 	}
 
-	if rm.curRoom.hasPlayer(uid) {
+	if rm.curRoom.hasPlayer(p.id) {
 		return rm.curRoom
 	}
 
 	return nil
+}
+
+func (rm *RoomManager) JoinRoom(player *Player) *Room {
+	if v, ok := rm.playerRoom[player.id]; ok {
+		return v
+	}
+
+	if !rm.curRoom.hasPlayer(player.id) {
+		rm.curRoom.enterRoom(player);
+	}
+
+	return rm.curRoom
 }
 
 func CreateRoomManager() *RoomManager {
@@ -115,6 +127,10 @@ func (r *Room) hasPlayer(uid int64) (ok bool) {
 // 进入房间选择一个位置
 func (r *Room) enterRoom(player *Player) (index int) {
 	if r.status == 0 {
+
+		if v, ok := r.playerIndexMap[player.id]; ok {
+			return v
+		}
 		index = r.posIndex
 		r.posIndex++
 

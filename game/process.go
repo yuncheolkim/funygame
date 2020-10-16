@@ -5,10 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-const MoveProcess = 1
-const EnterGameProcess = 2
-
-type Action func(msg interface{}, player *Player) proto.Message
+type Action func(msg proto.Message, player *Player) proto.Message
 
 type Process struct {
 	Msg    func() proto.Message
@@ -16,7 +13,7 @@ type Process struct {
 }
 
 func InitProcess() {
-	GameVal.ProcessMap[MoveProcess] = Process{
+	GameVal.ProcessMap[10001] = Process{
 		Action: MatchAction,
 		Msg: func() proto.Message {
 			return &pb.StartMatchReq_10001{}

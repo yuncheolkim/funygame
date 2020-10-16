@@ -1,7 +1,6 @@
 package game
 
 import (
-	"funygame/core"
 	"funygame/pb"
 	"funygame/utils"
 	"github.com/golang/protobuf/proto"
@@ -88,14 +87,11 @@ type Room struct {
 
 	playerIndexMap map[int64]int
 
-	MsgChan chan proto.Message
-
 	mu sync.Mutex
 }
 
 func CreateRoom() *Room {
 	r := &Room{
-		MsgChan:        make(chan proto.Message),
 		playerIndexMap: make(map[int64]int),
 	}
 	r.RoomId = nextRoomId()
@@ -105,29 +101,10 @@ func CreateRoom() *Room {
 	}
 
 	utils.Shuffle(r.pos)
-	go r.run()
 	return r
 }
 
-func (r *Room) RecvMsg(msg proto.Message) {
-	r.MsgChan <- msg
-}
-func (r *Room) run() {
-	select {
-	case v, ok := <-r.MsgChan:
-		{
-			switch v.(type) {
-			case *pb.AttackTell_20001:
 
-			case *pb.CureTell_20002:
-
-			case *pb.DefTell_20003:
-
-			}
-			core.Debug("房间收到消息:s%v,%v", v, ok)
-		}
-	}
-}
 func (r *Room) hasPlayer(uid int64) (ok bool) {
 	_, ok = r.playerIndexMap[uid]
 	return

@@ -33,16 +33,23 @@ func TestClient(t *testing.T) {
 	defer conn.Close()
 
 	fmt.Println(conn.LocalAddr().String() + " : Client connected!")
-	msg := pb.Message{
-		Seq: 11,
-		Uid: 123,
+	msg := pb.StartMatchReq_10001{
+		RoomId: 11111,
+	}
+	mbyte, _ := proto.Marshal(&msg)
+	m := pb.Message{
+		Seq:          110,
+		MsgNo:        10001,
+		BroadcastUid: nil,
+		Body:         mbyte,
+		Uid:          10,
 	}
 
 	go readData(conn)
 
 	for i := 0; i < 2; i++ {
 		var b []byte
-		l, _ := proto.Marshal(&msg)
+		l, _ := proto.Marshal(&m)
 
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, int32(len(l)))

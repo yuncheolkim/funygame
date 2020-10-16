@@ -56,6 +56,7 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 func CreateRoomManager() *RoomManager {
 	r := &RoomManager{
 		curRoom: CreateRoom(),
+		playerRoom:make(map[int64]*Room),
 	}
 
 	return r
@@ -84,6 +85,7 @@ type Room struct {
 func CreateRoom() *Room {
 	r := &Room{
 		MsgChan: make(chan proto.Message),
+		playerIndexMap : make(map[int64]int),
 	}
 	r.RoomId = nextRoomId()
 	r.pos = make([]int, 100, 100)

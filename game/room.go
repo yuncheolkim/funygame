@@ -5,6 +5,7 @@ import (
 	"funygame/pb"
 	"funygame/utils"
 	"github.com/golang/protobuf/proto"
+	"sync"
 	"sync/atomic"
 )
 
@@ -18,17 +19,19 @@ func nextRoomId() int64 {
 }
 
 type playerStatus struct {
-	blood  int
 	player *Player
 }
 
 // 房间管理，保存玩家所在的房间
 type RoomManager struct {
+	mu         sync.Mutex
 	playerRoom map[int64]*Room // 玩家所在房间
 	curRoom    *Room
 }
 
 func (rm *RoomManager) FindRoom(p *Player) *Room {
+	rm.mu.Lock()
+	defer rm.mu.Unlock()
 	if v, ok := rm.playerRoom[p.id]; ok {
 		return v
 	}
@@ -41,12 +44,15 @@ func (rm *RoomManager) FindRoom(p *Player) *Room {
 }
 
 func (rm *RoomManager) JoinRoom(player *Player) *Room {
+	rm.mu.Lock()
+	defer rm.mu.Unlock()
 	if v, ok := rm.playerRoom[player.id]; ok {
 		return v
 	}
 
 	if !rm.curRoom.hasPlayer(player.id) {
-		rm.curRoom.enterRoom(player);
+		rm.curRoom.enterRoom(player)
+
 		rm.playerRoom[player.id] = rm.curRoom
 		if rm.curRoom.isStart() {
 			rm.curRoom = CreateRoom()
@@ -72,7 +78,7 @@ type Room struct {
 
 	RoomId int64
 
-	playerStatus [10][10]*playerStatus
+	playerStatus [100]*playerStatus
 
 	// 空位
 	pos []int
@@ -83,6 +89,8 @@ type Room struct {
 	playerIndexMap map[int64]int
 
 	MsgChan chan proto.Message
+
+	mu sync.Mutex
 }
 
 func CreateRoom() *Room {
@@ -101,25 +109,21 @@ func CreateRoom() *Room {
 	return r
 }
 
-func IndexToXY(index int) [2]int {
-	var a [2]int
-	a[0] = index % 10
-	a[1] = index / 10
-
-	return a
-}
-
-func XYToIndex(xy [2]int) int {
-	return xy[0] + xy[1]*10
-}
-
-func (r *Room) SendMsg(msg proto.Message) {
+func (r *Room) RecvMsg(msg proto.Message) {
 	r.MsgChan <- msg
 }
 func (r *Room) run() {
 	select {
 	case v, ok := <-r.MsgChan:
 		{
+			switch v.(type) {
+			case *pb.AttackTell_20001:
+
+			case *pb.CureTell_20002:
+
+			case *pb.DefTell_20003:
+
+			}
 			core.Debug("房间收到消息:s%v,%v", v, ok)
 		}
 	}
@@ -129,7 +133,7 @@ func (r *Room) hasPlayer(uid int64) (ok bool) {
 	return
 }
 
-// 进入房间选择一个位置
+// 玩家进入房间
 func (r *Room) enterRoom(player *Player) (index int) {
 	if r.status == 0 {
 
@@ -139,9 +143,9 @@ func (r *Room) enterRoom(player *Player) (index int) {
 		index = r.posIndex
 		r.posIndex++
 
-		xy := IndexToXY(index)
-		r.playerStatus[xy[0]][xy[1]] = createStatus(player)
+		r.playerStatus[index] = createStatus(player)
 
+		r.broadcastPlayerJoin(player)
 		if r.posIndex == 100 {
 			r.status = 1
 			r.pushStart()
@@ -170,15 +174,88 @@ func (r *Room) pushStart() {
 		RoomId: r.RoomId,
 	}
 
-	for i := 0; i < 10; i++ {
-		for j := 0; j < 10; j++ {
-			p := r.playerStatus[i][j]
-			p.player.SendMsg(msg)
+	for i := 0; i < 100; i++ {
+		p := r.playerStatus[i]
+		p.player.SendMsg(msg, 30001)
+	}
+}
+
+func (r *Room) GetIndex(uid int64) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.playerIndexMap[uid]
+}
+
+func (r *Room) broadcastPlayerJoin(player *Player) {
+
+	msg := pb.UserEnterPush_30002{
+		Index: int32(r.GetIndex(player.id)),
+	}
+	for i := 0; i < 100; i++ {
+		s := r.playerStatus[i]
+		if s != nil && !s.player.robot && s.player.id != player.id {
+			s.player.SendMsg(&msg, 30002)
 		}
 	}
 }
 
+func (r *Room) broadcast(m proto.Message, msgNo int32) {
+
+	for i := 0; i < 100; i++ {
+		s := r.playerStatus[i]
+		if s != nil && !s.player.robot {
+			s.player.SendMsg(m, msgNo)
+		}
+	}
+}
+
+// 攻击敌人
+func (r *Room) attack(player *Player, index int32, damage int32) {
+	r.mu.Lock()
+	r.mu.Unlock()
+
+	p := r.playerStatus[index].player
+
+	attacked := p.attacked(damage)
+	if attacked > 0 { // 掉血，给所有人推送
+		m := pb.BloodChangePush_30003{
+			Index: index,
+			Num:   attacked * (-1),
+		}
+
+		r.broadcast(&m, 30003)
+	} else {
+		// 给本人发送消息，减少护盾
+		m := pb.BloodChangePush_30003{
+			Index: index,
+			Num:   attacked * (-1),
+		}
+		r.playerStatus[index].player.SendMsg(&m, 30003)
+	}
+}
+
+func (r *Room) addDef(player *Player, i int32) {
+	r.mu.Lock()
+	r.mu.Unlock()
+	player.addDef(i)
+}
+
+func (r *Room) addHp(player *Player, i int32) {
+	r.mu.Lock()
+	r.mu.Unlock()
+
+	added := player.addHp(i)
+	if added > 0 {
+		m := pb.BloodChangePush_30003{
+			Index: int32(r.playerIndexMap[player.id]),
+			Num:   added,
+		}
+		r.broadcast(&m, 30003)
+	}
+
+}
+
 func createStatus(player *Player) *playerStatus {
-	p := &playerStatus{blood: 2000, player: player}
+	p := &playerStatus{player: player}
 	return p
 }

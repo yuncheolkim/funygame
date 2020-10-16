@@ -5,7 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-type Action func(msg interface{}, player *Player) proto.Message
+type Action func(msg proto.Message, player *Player) proto.Message
 
 type Process struct {
 	Msg    func() proto.Message

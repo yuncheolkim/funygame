@@ -21,17 +21,6 @@ type Game struct {
 	RoomManager *RoomManager
 }
 
-func (g *Game) BroadcastMsg(msg proto.Message, pid int64) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
-	for _, v := range g.AddrMap {
-		if v.id != pid {
-			v.SendMsg(msg)
-		}
-	}
-}
-
 // 第一次连接进行玩家注册
 func (g *Game) RegisterPlayer(connection *core.Connection) {
 	g.mu.Lock()
@@ -44,6 +33,8 @@ func (g *Game) RegisterPlayer(connection *core.Connection) {
 			id:      playerUid.AddAndGet(1),
 			conn:    connection,
 			msgChan: make(chan proto.Message),
+			robot:   false,
+			data:    &PlayerData{},
 		}
 	}
 }
@@ -80,7 +71,7 @@ func Start() {
 
 		p, _ := GameVal.AddrMap[r.RemoteAddr]
 
-		if p == nil{
+		if p == nil {
 			core.Error("用户不存在:%v", r.RemoteAddr)
 			return
 		}
@@ -100,7 +91,14 @@ func Start() {
 
 			retMsg := v.Action(msgBody, p)
 			if retMsg != nil {
-				bytes := utils.MsgToBytes(retMsg)
+				b, _ := proto.Marshal(retMsg)
+				m := &pb.Message{
+					Seq:   msg.Seq,
+					MsgNo: msg.MsgNo,
+					Body:  b,
+					Uid:   0,
+				}
+				bytes := utils.MsgToBytes(m)
 				w.Write(bytes)
 			}
 		} else {

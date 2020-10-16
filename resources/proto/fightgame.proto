@@ -5,8 +5,26 @@ option go_package = "pb";
 message StartMatchReq_10001 {
     int64 roomId = 1;
 }
+message StartMatchRes_10001 {
+    int32 index = 1;
+}
 //离开游戏
 message LeaveRoomReq_10005 {
+}
+
+
+// 攻击别人
+message AttackTell_20001{
+    int32 index = 1; // 目标
+    int32 num = 2; // 伤害
+}
+// 回血
+message CureTell_20002{
+    int32 num = 1;
+}
+// 增加护盾
+message DefTell_20003{
+    int32 num = 1;
 }
 
 // 游戏正式开始
@@ -18,20 +36,8 @@ message StartGamePush_30001 {
 message UserEnterPush_30002 {
     int32 index = 1;
 }
-
-/////////// 游戏开始后
-// 攻击别人
-message AttackTell_20001{
-    int32 index = 1; // 目标
-    int32 num = 2; // 伤害
-}
-// 回血
-message CureTell_20002{
-    int32 num = 1; // 回血
-}
-
 // 血量变化
-message BloodChangePush_30001{
+message BloodChangePush_30003{
     int32 index = 1; // 目标
     int32 num = 2; // 血量变化
 }

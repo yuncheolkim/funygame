@@ -25,8 +25,7 @@ type playerStatus struct {
 // 房间管理，保存玩家所在的房间
 type RoomManager struct {
 	playerRoom map[int64]*Room // 玩家所在房间
-
-	curRoom *Room
+	curRoom    *Room
 }
 
 func (rm *RoomManager) FindRoom(p *Player) *Room {
@@ -48,15 +47,19 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 
 	if !rm.curRoom.hasPlayer(player.id) {
 		rm.curRoom.enterRoom(player);
+		rm.playerRoom[player.id] = rm.curRoom
+		if rm.curRoom.isStart() {
+			rm.curRoom = CreateRoom()
+		}
 	}
 
-	return rm.curRoom
+	return rm.playerRoom[player.id]
 }
 
 func CreateRoomManager() *RoomManager {
 	r := &RoomManager{
-		curRoom: CreateRoom(),
-		playerRoom:make(map[int64]*Room),
+		curRoom:    CreateRoom(),
+		playerRoom: make(map[int64]*Room),
 	}
 
 	return r
@@ -84,8 +87,8 @@ type Room struct {
 
 func CreateRoom() *Room {
 	r := &Room{
-		MsgChan: make(chan proto.Message),
-		playerIndexMap : make(map[int64]int),
+		MsgChan:        make(chan proto.Message),
+		playerIndexMap: make(map[int64]int),
 	}
 	r.RoomId = nextRoomId()
 	r.pos = make([]int, 100, 100)
@@ -154,6 +157,10 @@ func (r *Room) enterRoom(player *Player) (index int) {
 
 func (r *Room) exitRoom(player *Player) {
 
+}
+
+func (r *Room) isStart() bool {
+	return r.status == 1
 }
 
 // 推送开始信息

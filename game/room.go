@@ -61,6 +61,16 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 	return rm.playerRoom[player.id]
 }
 
+func (rm *RoomManager) ExitRoom(p *Player) {
+	rm.mu.Lock()
+	defer rm.mu.Unlock()
+	if v, ok := rm.playerRoom[p.id]; ok {
+		v.exitRoom(p)
+	}else if rm.curRoom.hasPlayer(p.id) {
+		rm.curRoom.exitRoom(p)
+	}
+}
+
 func CreateRoomManager() *RoomManager {
 	r := &RoomManager{
 		curRoom:    CreateRoom(),
@@ -137,8 +147,10 @@ func (r *Room) enterRoom(player *Player) (index int) {
 }
 
 func (r *Room) exitRoom(player *Player) {
-
+	index := r.playerIndexMap[player.id]
+	r.playerStatus[index] = nil
 }
+
 
 func (r *Room) isStart() bool {
 	return r.status == 1

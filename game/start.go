@@ -5,6 +5,7 @@ import (
 	"funygame/pb"
 	"funygame/utils"
 	"github.com/golang/protobuf/proto"
+	"runtime"
 	"sync"
 )
 
@@ -44,6 +45,7 @@ func (g *Game) CloseConnection(addr string) {
 		core.Debug("移除角色:%s,%v", addr, p.id)
 		delete(g.AddrMap, addr)
 		delete(g.IdMap, p.id)
+		g.RoomManager.ExitRoom(p)
 	}
 }
 
@@ -60,7 +62,14 @@ func Start() {
 	sm := &core.ServeMux{}
 
 	sm.HandleFunc("pb", func(r *core.Request, w *core.Response) {
-
+		defer func() {
+			if err := recover(); err != nil {
+				const size = 64 << 10
+				buf := make([]byte, size)
+				buf = buf[:runtime.Stack(buf, false)]
+				core.Debug("发生错误 %v####%s\n", err, buf)
+			}
+		}()
 		msg := &pb.Message{}
 		e := r.ReadPb(msg)
 

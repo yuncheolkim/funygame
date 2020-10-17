@@ -19,4 +19,22 @@ func InitProcess() {
 			return &pb.StartMatchReq_10001{}
 		},
 	}
+	GameVal.ProcessMap[20001] = Process{
+		Action: AttackAction,
+		Msg: func() proto.Message {
+			return &pb.AttackTell_20001{}
+		},
+	}
+	GameVal.ProcessMap[20002] = Process{
+		Action: CureAction,
+		Msg: func() proto.Message {
+			return &pb.CureTell_20002{}
+		},
+	}
+	GameVal.ProcessMap[20003] = Process{
+		Action: DefAction,
+		Msg: func() proto.Message {
+			return &pb.DefTell_20003{}
+		},
+	}
 }

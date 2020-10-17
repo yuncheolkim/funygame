@@ -1,6 +1,7 @@
 package game
 
 import (
+	"funygame/core"
 	"funygame/pb"
 	"github.com/golang/protobuf/proto"
 )
@@ -24,33 +25,38 @@ func MatchAction(msg proto.Message, player *Player) proto.Message {
 }
 
 // 攻击
-func AttackAction(msg proto.Message, player *Player) {
+func AttackAction(msg proto.Message, player *Player) proto.Message {
 
 	room := GameVal.RoomManager.FindRoom(player)
 	if room != nil {
 		m := msg.(*pb.AttackTell_20001)
-		room.mu.Lock()
-		defer room.mu.Unlock()
+		core.Logf("攻击")
 		room.attack(player, m.Index, m.Num)
 	}
+
+	return nil
 }
 
 // 回血
-func CureAction(msg proto.Message, player *Player) {
+func CureAction(msg proto.Message, player *Player)proto.Message{
 
 	room := GameVal.RoomManager.FindRoom(player)
 	if room != nil {
 		m := msg.(*pb.CureTell_20002)
+		core.Logf("加血")
 		room.addHp(player, m.Num)
 	}
+	return nil
 }
 
 // 防御
-func DefAction(msg proto.Message, player *Player) {
+func DefAction(msg proto.Message, player *Player)proto.Message {
 
 	room := GameVal.RoomManager.FindRoom(player)
 	if room != nil {
 		m := msg.(*pb.DefTell_20003)
+		core.Logf("加防")
 		room.addDef(player, m.Num)
 	}
+	return nil
 }

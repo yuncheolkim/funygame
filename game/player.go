@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"funygame/core"
 	"funygame/pb"
 	"github.com/golang/protobuf/proto"
@@ -31,6 +32,8 @@ func (p *Player) GetId() int64 {
 
 func (p *Player) SendMsg(i proto.Message, msgNo int32) {
 	p.mu.Lock()
+	defer p.mu.Unlock()
+	fmt.Printf("[%v]发送消息，消息号:%v\n",p.id, msgNo)
 	bytes, _ := proto.Marshal(i)
 	m := pb.Message{
 		Seq:          0,
@@ -41,11 +44,14 @@ func (p *Player) SendMsg(i proto.Message, msgNo int32) {
 	}
 	p.conn.WritePb(&m)
 	p.conn.Flush()
-	p.mu.Unlock()
+
 }
 
 // 受到攻击
 func (p *Player) attacked(damage int32) int32 {
+	if damage <= 0{
+		return 0
+	}
 	if p.data.Def <= 0 {
 		return damage
 	}

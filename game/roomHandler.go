@@ -20,6 +20,7 @@ func MatchAction(msg proto.Message, player *Player) proto.Message {
 
 	res := &pb.StartMatchRes_10001{
 		Index: int32(room.GetIndex(player.GetId())),
+		PlayerIndex:room.allIndex(),
 	}
 	return res
 }

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"funygame/core"
 	"funygame/pb"
 	"funygame/utils"
@@ -35,7 +36,7 @@ func (g *Game) RegisterPlayer(connection *core.Connection) {
 			conn:    connection,
 			msgChan: make(chan proto.Message),
 			robot:   false,
-			data:    &PlayerData{},
+			data:    &PlayerData{Hp:2000},
 		}
 	}
 }
@@ -107,6 +108,7 @@ func Start() {
 					Body:  b,
 					Uid:   0,
 				}
+				fmt.Printf("[%v]响应消息，消息号:%v\n",p.id,msg.MsgNo)
 				bytes := utils.MsgToBytes(m)
 				w.Write(bytes)
 			}

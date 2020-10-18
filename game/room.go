@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"funygame/pb"
 	"funygame/utils"
 	"github.com/golang/protobuf/proto"
@@ -105,7 +106,7 @@ func CreateRoom() *Room {
 		playerIndexMap: make(map[int64]int),
 	}
 	r.RoomId = nextRoomId()
-	r.pos = make([]int, 100, 100)
+	r.pos = make([]int,0,0)
 	for i := 0; i < 100; i++ {
 		r.pos = append(r.pos, i)
 	}
@@ -122,24 +123,23 @@ func (r *Room) hasPlayer(uid int64) (ok bool) {
 
 // 玩家进入房间
 func (r *Room) enterRoom(player *Player) (index int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.status == 0 {
 
 		if v, ok := r.playerIndexMap[player.id]; ok {
 			return v
 		}
-		index = r.posIndex
+		index = r.pos[r.posIndex]
 		r.posIndex++
 
 		r.playerStatus[index] = createStatus(player)
-
+		r.playerIndexMap[player.id] = index
 		r.broadcastPlayerJoin(player)
-		if r.posIndex == 100 {
+		if r.posIndex == 2 {
 			r.status = 1
 			r.pushStart()
 		}
-
-		r.playerIndexMap[player.id] = index
-
 	} else {
 		index = -1
 	}
@@ -149,6 +149,16 @@ func (r *Room) enterRoom(player *Player) (index int) {
 func (r *Room) exitRoom(player *Player) {
 	index := r.playerIndexMap[player.id]
 	r.playerStatus[index] = nil
+
+	r.posIndex -= 1;
+	if r.posIndex < 0{
+		r.posIndex = 0
+	}
+	// 发送消息
+	msg := &pb.LeaveRoomReq_30004{
+		Index:int32(index),
+	}
+	r.broadcast(msg,30004)
 }
 
 
@@ -165,7 +175,10 @@ func (r *Room) pushStart() {
 
 	for i := 0; i < 100; i++ {
 		p := r.playerStatus[i]
-		p.player.SendMsg(msg, 30001)
+		if  p != nil{
+			p.player.SendMsg(msg, 30001)
+		}
+
 	}
 }
 
@@ -174,11 +187,14 @@ func (r *Room) GetIndex(uid int64) int {
 	defer r.mu.Unlock()
 	return r.playerIndexMap[uid]
 }
+func (r *Room) GetIndexInLock(uid int64) int {
+	return r.playerIndexMap[uid]
+}
 
 func (r *Room) broadcastPlayerJoin(player *Player) {
 
 	msg := pb.UserEnterPush_30002{
-		Index: int32(r.GetIndex(player.id)),
+		Index: int32(r.playerIndexMap[player.id]),
 	}
 	for i := 0; i < 100; i++ {
 		s := r.playerStatus[i]
@@ -201,8 +217,10 @@ func (r *Room) broadcast(m proto.Message, msgNo int32) {
 // 攻击敌人
 func (r *Room) attack(player *Player, index int32, damage int32) {
 	r.mu.Lock()
-	r.mu.Unlock()
-
+	defer r.mu.Unlock()
+	if r.playerStatus[index] == nil{
+		return
+	}
 	p := r.playerStatus[index].player
 
 	attacked := p.attacked(damage)
@@ -211,7 +229,7 @@ func (r *Room) attack(player *Player, index int32, damage int32) {
 			Index: index,
 			Num:   attacked * (-1),
 		}
-
+		fmt.Println("attack",m)
 		r.broadcast(&m, 30003)
 	} else {
 		// 给本人发送消息，减少护盾
@@ -219,6 +237,8 @@ func (r *Room) attack(player *Player, index int32, damage int32) {
 			Index: index,
 			Num:   attacked * (-1),
 		}
+
+		fmt.Println("attack----",m)
 		r.playerStatus[index].player.SendMsg(&m, 30003)
 	}
 }
@@ -242,6 +262,14 @@ func (r *Room) addHp(player *Player, i int32) {
 		r.broadcast(&m, 30003)
 	}
 
+}
+
+func (r *Room) allIndex() []int32 {
+	a := make([]int32,0,0)
+	for i := 0;i< r.posIndex ;i++  {
+		a = append(a,int32(r.pos[i]))
+	}
+	return a
 }
 
 func createStatus(player *Player) *playerStatus {

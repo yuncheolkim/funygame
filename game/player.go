@@ -26,6 +26,16 @@ type PlayerData struct {
 	Def int32
 }
 
+func CreateRobot() *Player{
+	p := &Player{
+		id:      playerUid.AddAndGet(1),
+		msgChan: make(chan proto.Message),
+		robot:   true,
+		data:    &PlayerData{Hp:2000},
+	}
+	return p
+}
+
 func (p *Player) GetId() int64 {
 	return p.id
 }

@@ -102,13 +102,14 @@ type Room struct {
 
 	mu sync.Mutex
 
-	robotGen <-chan time.Time
+	tick *time.Ticker
 }
 
 func CreateRoom() *Room {
 	r := &Room{
 		playerIndexMap: make(map[int64]int),
 		humanIndexMap:  make(map[int64]int),
+		tick:           time.NewTicker(time.Second),
 	}
 	r.RoomId = nextRoomId()
 	r.pos = make([]int, 0, 0)
@@ -148,8 +149,6 @@ func (r *Room) enterRoom(player *Player) (index int) {
 		if r.posIndex == 100 {
 			r.status = 1
 			r.pushStart()
-		} else {
-			r.robotGen = time.After(time.Second)
 		}
 
 	} else {
@@ -160,8 +159,28 @@ func (r *Room) enterRoom(player *Player) (index int) {
 
 func (r *Room) addRobotRun() {
 	for {
-		if r.status == 1 {
-			break
+		r.mu.Lock()
+		if r.isStart() {
+			r.tick.Stop()
+			r.mu.Unlock()
+			break;
+		}
+		r.mu.Unlock()
+		select {
+		case <-r.tick.C:
+			{
+				r.mu.Lock()
+				if len(r.humanIndexMap) > 0 {
+					r.mu.Unlock()
+					// 加机器人
+					r.enterRoom(CreateRobot())
+
+				} else {
+					r.mu.Unlock()
+
+				}
+
+			}
 		}
 	}
 
@@ -183,6 +202,8 @@ func (r *Room) exitRoom(player *Player) {
 }
 
 func (r *Room) isStart() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	return r.status == 1
 }
 

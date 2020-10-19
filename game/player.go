@@ -31,6 +31,9 @@ func (p *Player) GetId() int64 {
 }
 
 func (p *Player) SendMsg(i proto.Message, msgNo int32) {
+	if p.robot{
+		return
+	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	fmt.Printf("[%v]发送消息，消息号:%v\n",p.id, msgNo)

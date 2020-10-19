@@ -5,6 +5,7 @@ import (
 	"funygame/pb"
 	"funygame/utils"
 	"github.com/golang/protobuf/proto"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -55,8 +56,9 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 		rm.curRoom.enterRoom(player)
 
 		rm.playerRoom[player.id] = rm.curRoom
-		if rm.curRoom.isStart() {
-			rm.curRoom = CreateRoom()
+		if rm.curRoom.isStart(true) {
+			r := CreateRoom()
+			rm.curRoom = r
 		}
 	}
 
@@ -74,8 +76,9 @@ func (rm *RoomManager) ExitRoom(p *Player) {
 }
 
 func CreateRoomManager() *RoomManager {
+	room := CreateRoom()
 	r := &RoomManager{
-		curRoom:    CreateRoom(),
+		curRoom:    room,
 		playerRoom: make(map[int64]*Room),
 	}
 
@@ -99,6 +102,7 @@ type Room struct {
 
 	playerIndexMap map[int64]int
 	humanIndexMap  map[int64]int
+	alive          []int
 
 	mu sync.Mutex
 
@@ -129,8 +133,10 @@ func (r *Room) hasPlayer(uid int64) (ok bool) {
 
 // 玩家进入房间
 func (r *Room) enterRoom(player *Player) (index int) {
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	if r.status == 0 {
 
 		if v, ok := r.playerIndexMap[player.id]; ok {
@@ -139,9 +145,11 @@ func (r *Room) enterRoom(player *Player) (index int) {
 		index = r.pos[r.posIndex]
 		r.posIndex++
 
-		if player.robot {
+		if !player.robot {
 			r.humanIndexMap[player.id] = index;
 		}
+
+		r.alive = append(r.alive, index)
 
 		r.playerStatus[index] = createStatus(player)
 		r.playerIndexMap[player.id] = index
@@ -160,7 +168,7 @@ func (r *Room) enterRoom(player *Player) (index int) {
 func (r *Room) addRobotRun() {
 	for {
 		r.mu.Lock()
-		if r.isStart() {
+		if r.status == 2 {
 			r.tick.Stop()
 			r.mu.Unlock()
 			break;
@@ -170,11 +178,19 @@ func (r *Room) addRobotRun() {
 		case <-r.tick.C:
 			{
 				r.mu.Lock()
-				if len(r.humanIndexMap) > 0 {
+				if r.isStart(false) {
+					//机器人攻击
+					for _, v := range r.playerStatus {
+						if v != nil && v.player.robot && v.player.IsAlive() {
+							r.attack(v.player, int32(r.randIndex(r.playerIndexMap[v.player.id])), 10, false)
+						}
+					}
+
+					r.mu.Unlock()
+				} else if len(r.humanIndexMap) > 0 {
 					r.mu.Unlock()
 					// 加机器人
 					r.enterRoom(CreateRobot())
-
 				} else {
 					r.mu.Unlock()
 
@@ -201,9 +217,12 @@ func (r *Room) exitRoom(player *Player) {
 	r.broadcast(msg, 30004)
 }
 
-func (r *Room) isStart() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *Room) isStart(lock bool) bool {
+	if lock {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+	}
+
 	return r.status == 1
 }
 
@@ -219,8 +238,8 @@ func (r *Room) pushStart() {
 		if p != nil {
 			p.player.SendMsg(msg, 30001)
 		}
-
 	}
+
 }
 
 func (r *Room) GetIndex(uid int64) int {
@@ -254,11 +273,25 @@ func (r *Room) broadcast(m proto.Message, msgNo int32) {
 		}
 	}
 }
+func DeleteSlice(a []int, v int) []int {
+	j := 0
+	for _, val := range a {
+		if val == v {
+			a[j] = val
+			j++
+			break
+		}
+	}
+	return a[:j]
+}
 
 // 攻击敌人
-func (r *Room) attack(player *Player, index int32, damage int32) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
+	if lock {
+
+		r.mu.Lock()
+		defer r.mu.Unlock()
+	}
 	if r.playerStatus[index] == nil {
 		return
 	}
@@ -272,6 +305,10 @@ func (r *Room) attack(player *Player, index int32, damage int32) {
 		}
 		fmt.Println("attack", m)
 		r.broadcast(&m, 30003)
+
+		if p.data.Hp <= 0 {
+			r.alive = DeleteSlice(r.alive, r.playerIndexMap[p.id])
+		}
 	} else {
 		// 给本人发送消息，减少护盾
 		m := pb.BloodChangePush_30003{
@@ -311,6 +348,14 @@ func (r *Room) allIndex() []int32 {
 		a = append(a, int32(r.pos[i]))
 	}
 	return a
+}
+func (r *Room) randIndex(except int) int {
+	var i = rand.Intn(len(r.alive))
+	for i == except {
+		i = rand.Intn(len(r.alive))
+	}
+
+	return r.alive[i]
 }
 
 func createStatus(player *Player) *playerStatus {

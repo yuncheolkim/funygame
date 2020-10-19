@@ -65,10 +65,6 @@ func (p *Player) attacked(damage int32) int32 {
 	if damage <= 0{
 		return 0
 	}
-	if p.data.Def <= 0 {
-		return damage
-	}
-
 	if p.data.Def >= damage {
 		p.data.Def -= damage
 		return 0
@@ -95,4 +91,8 @@ func (p *Player) addHp(i int32) int32 {
 	}
 
 	return p.data.Hp - old
+}
+
+func (p *Player)  IsAlive() bool{
+	return p.data.Hp > 0
 }

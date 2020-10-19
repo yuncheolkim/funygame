@@ -32,7 +32,7 @@ func AttackAction(msg proto.Message, player *Player) proto.Message {
 	if room != nil {
 		m := msg.(*pb.AttackTell_20001)
 		core.Logf("攻击")
-		room.attack(player, m.Index, m.Num)
+		room.attack(player, m.Index, m.Num,true)
 	}
 
 	return nil

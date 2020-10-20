@@ -171,6 +171,7 @@ func (r *Room) addRobotRun() {
 		if r.status == 2 {
 			r.tick.Stop()
 			r.mu.Unlock()
+			fmt.Println("End game")
 			break;
 		}
 		r.mu.Unlock()
@@ -215,6 +216,8 @@ func (r *Room) exitRoom(player *Player) {
 		Index: int32(index),
 	}
 	r.broadcast(msg, 30004)
+
+
 }
 
 func (r *Room) isStart(lock bool) bool {
@@ -275,14 +278,13 @@ func (r *Room) broadcast(m proto.Message, msgNo int32) {
 }
 func DeleteSlice(a []int, v int) []int {
 	j := 0
-	for _, val := range a {
+	for i, val := range a {
 		if val == v {
-			a[j] = val
-			j++
+			j = i
 			break
 		}
 	}
-	return a[:j]
+	return append(a[:j], a[j+1:]...)
 }
 
 // 攻击敌人

@@ -58,6 +58,7 @@ var GameVal = &Game{
 }
 
 func Start() {
+	fmt.Println("启动服务器")
 
 	InitProcess()
 	sm := &core.ServeMux{}
@@ -120,7 +121,7 @@ func Start() {
 	})
 
 	s := &core.Server{
-		Addr: "127.0.0.1:8900",
+		Addr: "0.0.0.0:8900",
 	}
 	s.RegisterOnConnection(func(connection *core.Connection) {
 

@@ -216,8 +216,6 @@ func (r *Room) exitRoom(player *Player) {
 		Index: int32(index),
 	}
 	r.broadcast(msg, 30004)
-
-
 }
 
 func (r *Room) isStart(lock bool) bool {
@@ -276,16 +274,6 @@ func (r *Room) broadcast(m proto.Message, msgNo int32) {
 		}
 	}
 }
-func DeleteSlice(a []int, v int) []int {
-	j := 0
-	for i, val := range a {
-		if val == v {
-			j = i
-			break
-		}
-	}
-	return append(a[:j], a[j+1:]...)
-}
 
 // 攻击敌人
 func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
@@ -309,7 +297,10 @@ func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
 		r.broadcast(&m, 30003)
 
 		if p.data.Hp <= 0 {
-			r.alive = DeleteSlice(r.alive, r.playerIndexMap[p.id])
+			r.alive = utils.DeleteSlice(r.alive, r.playerIndexMap[p.id])
+			if len(r.alive) == 0{
+				r.endGame()
+			}
 		}
 	} else {
 		// 给本人发送消息，减少护盾
@@ -358,6 +349,11 @@ func (r *Room) randIndex(except int) int {
 	}
 
 	return r.alive[i]
+}
+
+// 游戏结束
+func (r *Room) endGame() {
+
 }
 
 func createStatus(player *Player) *playerStatus {

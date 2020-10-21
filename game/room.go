@@ -35,6 +35,9 @@ func (rm *RoomManager) FindRoom(p *Player) *Room {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 	if v, ok := rm.playerRoom[p.id]; ok {
+		if v.isEnd(true) {
+			return nil
+		}
 		return v
 	}
 
@@ -49,6 +52,9 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 	if v, ok := rm.playerRoom[player.id]; ok {
+		if v.isEnd(true) {
+			return nil
+		}
 		return v
 	}
 
@@ -58,6 +64,7 @@ func (rm *RoomManager) JoinRoom(player *Player) *Room {
 		rm.playerRoom[player.id] = rm.curRoom
 		if rm.curRoom.isStart(true) {
 			r := CreateRoom()
+			r.rm = rm
 			rm.curRoom = r
 		}
 	}
@@ -81,6 +88,7 @@ func CreateRoomManager() *RoomManager {
 		curRoom:    room,
 		playerRoom: make(map[int64]*Room),
 	}
+	r.curRoom.rm = r
 
 	return r
 }
@@ -88,6 +96,7 @@ func CreateRoomManager() *RoomManager {
 ///////////////////////////////////////////////////// Room
 // 一个游戏房间
 type Room struct {
+	rm     *RoomManager
 	status int // 0 = 初始化，1=游戏中，2=已结束
 
 	RoomId int64
@@ -127,6 +136,8 @@ func CreateRoom() *Room {
 }
 
 func (r *Room) hasPlayer(uid int64) (ok bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	_, ok = r.playerIndexMap[uid]
 	return
 }
@@ -146,7 +157,7 @@ func (r *Room) enterRoom(player *Player) (index int) {
 		r.posIndex++
 
 		if !player.robot {
-			r.humanIndexMap[player.id] = index;
+			r.humanIndexMap[player.id] = index
 		}
 
 		r.alive = append(r.alive, index)
@@ -172,7 +183,7 @@ func (r *Room) addRobotRun() {
 			r.tick.Stop()
 			r.mu.Unlock()
 			fmt.Println("End game")
-			break;
+			break
 		}
 		r.mu.Unlock()
 		select {
@@ -207,7 +218,7 @@ func (r *Room) exitRoom(player *Player) {
 	index := r.playerIndexMap[player.id]
 	r.playerStatus[index] = nil
 
-	r.posIndex -= 1;
+	r.posIndex -= 1
 	if r.posIndex < 0 {
 		r.posIndex = 0
 	}
@@ -278,9 +289,11 @@ func (r *Room) broadcast(m proto.Message, msgNo int32) {
 // 攻击敌人
 func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
 	if lock {
-
 		r.mu.Lock()
 		defer r.mu.Unlock()
+	}
+	if !r.isStart(false) {
+		return
 	}
 	if r.playerStatus[index] == nil {
 		return
@@ -293,12 +306,11 @@ func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
 			Index: index,
 			Num:   attacked * (-1),
 		}
-		fmt.Println("attack", m)
 		r.broadcast(&m, 30003)
 
 		if p.data.Hp <= 0 {
 			r.alive = utils.DeleteSlice(r.alive, r.playerIndexMap[p.id])
-			if len(r.alive) == 0{
+			if len(r.alive) == 0 {
 				r.endGame()
 			}
 		}
@@ -314,15 +326,22 @@ func (r *Room) attack(player *Player, index int32, damage int32, lock bool) {
 	}
 }
 
+// 增加护甲
 func (r *Room) addDef(player *Player, i int32) {
 	r.mu.Lock()
 	r.mu.Unlock()
+	if !r.isStart(false) {
+		return
+	}
 	player.addDef(i)
 }
 
 func (r *Room) addHp(player *Player, i int32) {
 	r.mu.Lock()
 	r.mu.Unlock()
+	if !r.isStart(false) {
+		return
+	}
 
 	added := player.addHp(i)
 	if added > 0 {
@@ -353,6 +372,17 @@ func (r *Room) randIndex(except int) int {
 
 // 游戏结束
 func (r *Room) endGame() {
+	r.status = 2
+
+}
+
+func (r *Room) isEnd(lock bool) bool {
+	if lock {
+		r.mu.Lock()
+		r.mu.Unlock()
+	}
+
+	return r.status == 2
 
 }
 

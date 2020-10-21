@@ -15,12 +15,15 @@ func Shuffle(slice []int) {
 	}
 }
 func DeleteSlice(a []int, v int) []int {
-	j := 0
+	j := -1
 	for i, val := range a {
 		if val == v {
 			j = i
 			break
 		}
+	}
+	if j == -1 {
+		return a
 	}
 	return append(a[:j], a[j+1:]...)
 }
